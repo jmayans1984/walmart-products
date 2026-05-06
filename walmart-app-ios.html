@@ -457,6 +457,17 @@
             </div>
         </div>
 
+        <div style="background: white; padding: 16px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: none;" id="migrationBox">
+            <h3 style="margin-bottom: 12px; color: #333; font-size: 16px;">🔄 Migrar Datos</h3>
+            <button onclick="exportData()" style="width: 100%; padding: 12px; background: #2196f3; color: white; border: none; border-radius: 8px; font-weight: 600; margin-bottom: 8px;">
+                📤 Exportar Productos
+            </button>
+            <button onclick="document.getElementById('importFile').click()" style="width: 100%; padding: 12px; background: #4caf50; color: white; border: none; border-radius: 8px; font-weight: 600;">
+                📥 Importar Productos
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+        </div>
+
         <div class="scanner-section">
             <button class="scan-btn" id="scanBtn">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -560,6 +571,7 @@
             setupFormListeners();
             updateStats();
             setupSearch();
+            checkMigrationBox();
         });
 
         // Configurar búsqueda
@@ -908,6 +920,61 @@
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 3000);
+        }
+
+        // Mostrar caja de migración si no hay productos
+        function checkMigrationBox() {
+            const products = getProducts();
+            if (products.length === 0) {
+                document.getElementById('migrationBox').style.display = 'block';
+            } else {
+                document.getElementById('migrationBox').style.display = 'none';
+            }
+        }
+
+        // Exportar datos
+        function exportData() {
+            const products = getProducts();
+            if (products.length === 0) {
+                showNotification('No hay productos para exportar', 'error');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(products, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'walmart-productos-' + new Date().toISOString().split('T')[0] + '.json';
+            link.click();
+            URL.revokeObjectURL(url);
+            showNotification('✅ Productos exportados', 'success');
+        }
+
+        // Importar datos
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const products = JSON.parse(e.target.result);
+                    if (!Array.isArray(products)) {
+                        showNotification('Archivo inválido', 'error');
+                        return;
+                    }
+                    saveProducts(products);
+                    loadProducts();
+                    updateStats();
+                    checkMigrationBox();
+                    showNotification(`✅ ${products.length} productos importados`, 'success');
+                } catch (err) {
+                    showNotification('Error al importar archivo', 'error');
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
         }
     </script>
 </body>
