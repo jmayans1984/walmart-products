@@ -99,6 +99,17 @@
             background: #f0f8ff;
         }
 
+        #reader {
+            width: 100%;
+            margin: 16px 0;
+            display: none;
+        }
+
+        #reader video {
+            width: 100% !important;
+            border-radius: 8px;
+        }
+
         .form-section {
             background: white;
             padding: 20px;
@@ -321,49 +332,6 @@
             opacity: 0.3;
         }
 
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: 300px;
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 16px;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .scanner-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: 80px;
-            border: 3px solid #4caf50;
-            border-left: none;
-            border-right: none;
-            box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);
-        }
-
-        .scanner-line {
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background: #4caf50;
-            box-shadow: 0 0 10px #4caf50;
-            animation: scan 2s linear infinite;
-        }
-
-        @keyframes scan {
-            0%, 100% { top: 0; }
-            50% { top: calc(100% - 2px); }
-        }
-
         .notification {
             position: fixed;
             top: 20px;
@@ -463,15 +431,8 @@
             <button class="manual-entry-btn" id="manualBtn">
                 ✏️ Ingresar Manualmente
             </button>
-            <div id="videoContainer" style="display: none;">
-                <div class="video-container">
-                    <video id="video" playsinline autoplay></video>
-                    <div class="scanner-overlay">
-                        <div class="scanner-line"></div>
-                    </div>
-                </div>
-                <button class="cancel-btn" id="stopScanBtn">❌ Cancelar Escaneo</button>
-            </div>
+            <div id="reader"></div>
+            <button class="cancel-btn" id="stopScanBtn" style="display: none;">❌ Cancelar Escaneo</button>
         </div>
 
         <div class="form-section" id="formSection">
@@ -526,84 +487,91 @@
             </form>
         </div>
 
-        <div class="products-list" id="productsList">
-            <!-- Productos cargados dinámicamente -->
-        </div>
+        <div class="products-list" id="productsList"></div>
     </div>
 
     <div class="notification" id="notification"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
         const STORAGE_KEY = 'walmart_products';
-        let codeReader = null;
+        let html5QrCode = null;
+        let isScanning = false;
 
-        // Cargar productos al iniciar
         document.addEventListener('DOMContentLoaded', () => {
             loadProducts();
             setupFormListeners();
             updateStats();
         });
 
-        // Botón de ingreso manual
         document.getElementById('manualBtn').addEventListener('click', () => {
             document.getElementById('formSection').classList.add('active');
             document.getElementById('upc').focus();
             document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
         });
 
-        // Escaneo de código de barras
         document.getElementById('scanBtn').addEventListener('click', async () => {
+            if (isScanning) return;
+            
             try {
-                codeReader = new ZXing.BrowserMultiFormatReader();
-                const videoInputDevices = await codeReader.listVideoInputDevices();
+                html5QrCode = new Html5Qrcode("reader");
+                const cameras = await Html5Qrcode.getCameras();
                 
-                if (videoInputDevices.length === 0) {
-                    showNotification('No se encontró cámara disponible', 'error');
-                    return;
-                }
-
-                // Preferir cámara trasera en móviles
-                const selectedDeviceId = videoInputDevices.find(device => 
-                    device.label.toLowerCase().includes('back') || 
-                    device.label.toLowerCase().includes('rear') ||
-                    device.label.toLowerCase().includes('trasera')
-                )?.deviceId || videoInputDevices[0].deviceId;
-
-                document.getElementById('videoContainer').style.display = 'block';
-                document.querySelector('.scan-btn').style.display = 'none';
-                document.querySelector('.manual-entry-btn').style.display = 'none';
-
-                codeReader.decodeFromVideoDevice(selectedDeviceId, 'video', (result, err) => {
-                    if (result) {
-                        const code = result.text;
-                        document.getElementById('upc').value = code;
+                if (cameras && cameras.length > 0) {
+                    isScanning = true;
+                    document.getElementById('reader').style.display = 'block';
+                    document.getElementById('stopScanBtn').style.display = 'block';
+                    document.getElementById('scanBtn').style.display = 'none';
+                    document.getElementById('manualBtn').style.display = 'none';
+                    
+                    // Preferir cámara trasera
+                    const cameraId = cameras.length > 1 ? cameras[1].id : cameras[0].id;
+                    
+                    html5QrCode.start(
+                        cameraId,
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 150 }
+                        },
+                        (decodedText) => {
+                            document.getElementById('upc').value = decodedText;
+                            stopScanning();
+                            loadProductData(decodedText);
+                            showNotification(`✅ Código: ${decodedText}`, 'success');
+                            document.getElementById('formSection').classList.add('active');
+                            document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
+                        },
+                        (errorMessage) => {
+                            // Ignorar errores de no encontrar código
+                        }
+                    ).catch(err => {
+                        showNotification('Error al iniciar cámara', 'error');
+                        console.error(err);
                         stopScanning();
-                        loadProductData(code);
-                        showNotification(`✅ Código: ${code}`, 'success');
-                        document.getElementById('formSection').classList.add('active');
-                        document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
-                    }
-                });
+                    });
+                } else {
+                    showNotification('No se encontró cámara', 'error');
+                }
             } catch (err) {
-                console.error(err);
                 showNotification('Error al acceder a la cámara', 'error');
-                stopScanning();
+                console.error(err);
             }
         });
 
         document.getElementById('stopScanBtn').addEventListener('click', stopScanning);
 
         function stopScanning() {
-            if (codeReader) {
-                codeReader.reset();
+            if (html5QrCode && isScanning) {
+                html5QrCode.stop().then(() => {
+                    isScanning = false;
+                    document.getElementById('reader').style.display = 'none';
+                    document.getElementById('stopScanBtn').style.display = 'none';
+                    document.getElementById('scanBtn').style.display = 'flex';
+                    document.getElementById('manualBtn').style.display = 'block';
+                }).catch(err => console.error(err));
             }
-            document.getElementById('videoContainer').style.display = 'none';
-            document.querySelector('.scan-btn').style.display = 'flex';
-            document.querySelector('.manual-entry-btn').style.display = 'block';
         }
 
-        // Configurar listeners del formulario
         function setupFormListeners() {
             const inputs = ['precioVenta', 'vrUnit', 'descuento', 'taxes', 'walmartFee', 'fulfillment', 'inbound', 'otherFees'];
             inputs.forEach(id => {
@@ -611,7 +579,6 @@
             });
         }
 
-        // Calcular utilidad
         function calculateProfit() {
             const precioVenta = parseFloat(document.getElementById('precioVenta').value) || 0;
             const vrUnit = parseFloat(document.getElementById('vrUnit').value) || 0;
@@ -626,7 +593,6 @@
             document.getElementById('utilidad').value = '$' + utilidad.toFixed(2);
         }
 
-        // Guardar producto
         document.getElementById('productForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -664,10 +630,8 @@
             resetForm();
         });
 
-        // Cancelar edición
         document.getElementById('cancelBtn').addEventListener('click', resetForm);
 
-        // Cargar datos del producto si existe
         function loadProductData(upc) {
             const products = getProducts();
             const product = products.find(p => p.upc === upc);
@@ -687,14 +651,12 @@
             }
         }
 
-        // Resetear formulario
         function resetForm() {
             document.getElementById('productForm').reset();
             document.getElementById('formSection').classList.remove('active');
             document.getElementById('utilidad').value = '';
         }
 
-        // Funciones de almacenamiento
         function getProducts() {
             const data = localStorage.getItem(STORAGE_KEY);
             return data ? JSON.parse(data) : [];
@@ -704,7 +666,6 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
         }
 
-        // Actualizar estadísticas
         function updateStats() {
             const products = getProducts();
             if (products.length > 0) {
@@ -718,7 +679,6 @@
             }
         }
 
-        // Cargar y mostrar productos
         function loadProducts() {
             const products = getProducts();
             const container = document.getElementById('productsList');
@@ -738,7 +698,6 @@
                 return;
             }
 
-            // Ordenar por fecha de actualización (más reciente primero)
             products.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
             container.innerHTML = products.map(product => `
@@ -786,7 +745,6 @@
             `).join('');
         }
 
-        // Editar producto
         function editProduct(upc) {
             const products = getProducts();
             const product = products.find(p => p.upc === upc);
@@ -809,7 +767,6 @@
             }
         }
 
-        // Eliminar producto
         function deleteProduct(upc) {
             if (confirm('¿Eliminar este producto?')) {
                 const products = getProducts();
@@ -821,7 +778,6 @@
             }
         }
 
-        // Notificaciones
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             notification.textContent = message;
