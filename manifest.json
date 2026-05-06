@@ -1,0 +1,22 @@
+{
+  "name": "Productos Walmart",
+  "short_name": "WM Products",
+  "description": "Gestión de productos para vendedores de Walmart",
+  "start_url": "/walmart-products.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0071ce",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%230071ce' width='192' height='192' rx='24'/%3E%3Cpath fill='white' d='M96 40c-30.9 0-56 25.1-56 56s25.1 56 56 56 56-25.1 56-56-25.1-56-56-56zm0 8c26.5 0 48 21.5 48 48s-21.5 48-48 48-48-21.5-48-48 21.5-48 48-48z'/%3E%3Cpath fill='white' d='M112 72H80c-4.4 0-8 3.6-8 8v32c0 4.4 3.6 8 8 8h32c4.4 0 8-3.6 8-8V80c0-4.4-3.6-8-8-8zm0 8v32H80V80h32z'/%3E%3Cpath fill='%23ffc220' d='M88 88h16v16H88z'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%230071ce' width='512' height='512' rx='64'/%3E%3Cpath fill='white' d='M256 96c-88.2 0-160 71.8-160 160s71.8 160 160 160 160-71.8 160-160S344.2 96 256 96zm0 24c75.1 0 136 60.9 136 136s-60.9 136-136 136-136-60.9-136-136 60.9-136 136-136z'/%3E%3Cpath fill='white' d='M320 192h-96c-13.3 0-24 10.7-24 24v96c0 13.3 10.7 24 24 24h96c13.3 0 24-10.7 24-24v-96c0-13.3-10.7-24-24-24zm0 24v96h-96v-96h96z'/%3E%3Cpath fill='%23ffc220' d='M232 232h48v48h-48z'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
