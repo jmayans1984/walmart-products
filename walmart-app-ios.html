@@ -319,6 +319,43 @@
             transform: scale(0.95);
         }
 
+        .search-result-item {
+            background: #f9f9f9;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 4px solid #0071ce;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: #f0f8ff;
+        }
+
+        .search-result-item:active {
+            transform: scale(0.98);
+        }
+
+        .search-result-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .search-result-upc {
+            font-size: 12px;
+            color: #666;
+            font-family: 'Courier New', monospace;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 16px;
+            color: #999;
+            font-size: 14px;
+        }
+
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -431,6 +468,10 @@
             <button class="manual-entry-btn" id="manualBtn">
                 ✏️ Ingresar Manualmente
             </button>
+            <div style="margin-top: 16px;">
+                <input type="text" id="searchInput" placeholder="🔍 Buscar producto por nombre..." style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                <div id="searchResults" style="margin-top: 8px;"></div>
+            </div>
             <div id="reader"></div>
             <button class="cancel-btn" id="stopScanBtn" style="display: none;">❌ Cancelar Escaneo</button>
         </div>
@@ -518,7 +559,46 @@
             loadProducts();
             setupFormListeners();
             updateStats();
+            setupSearch();
         });
+
+        // Configurar búsqueda
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim().toLowerCase();
+                const resultsContainer = document.getElementById('searchResults');
+                
+                if (query.length === 0) {
+                    resultsContainer.innerHTML = '';
+                    return;
+                }
+                
+                const products = getProducts();
+                const filtered = products.filter(p => 
+                    p.nombre.toLowerCase().includes(query) ||
+                    p.upc.includes(query)
+                );
+                
+                if (filtered.length === 0) {
+                    resultsContainer.innerHTML = '<div class="no-results">No se encontraron productos</div>';
+                    return;
+                }
+                
+                resultsContainer.innerHTML = filtered.map(product => `
+                    <div class="search-result-item" onclick="selectSearchResult('${product.upc}')">
+                        <div class="search-result-name">${product.nombre}</div>
+                        <div class="search-result-upc">UPC: ${product.upc} • $${product.utilidad.toFixed(2)} utilidad</div>
+                    </div>
+                `).join('');
+            });
+        }
+
+        function selectSearchResult(upc) {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').innerHTML = '';
+            editProduct(upc);
+        }
 
         document.getElementById('manualBtn').addEventListener('click', () => {
             document.getElementById('formSection').classList.add('active');
