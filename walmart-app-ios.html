@@ -455,16 +455,32 @@
                     <input type="number" step="0.01" id="vrUnit" required inputmode="decimal">
                 </div>
                 <div class="form-group">
+                    <label>Descuento (%)</label>
+                    <input type="number" step="0.01" id="descuentoPercent" value="0" inputmode="decimal" placeholder="Ej: 10 para 10%">
+                </div>
+                <div class="form-group">
                     <label>Descuento ($)</label>
-                    <input type="number" step="0.01" id="descuento" value="0" inputmode="decimal">
+                    <input type="text" id="descuento" readonly class="calculated">
+                </div>
+                <div class="form-group">
+                    <label>Impuestos (%)</label>
+                    <input type="number" step="0.01" id="taxesPercent" value="0" inputmode="decimal" placeholder="Ej: 7 para 7%">
                 </div>
                 <div class="form-group">
                     <label>Impuestos ($)</label>
-                    <input type="number" step="0.01" id="taxes" value="0" inputmode="decimal">
+                    <input type="text" id="taxes" readonly class="calculated">
+                </div>
+                <div class="form-group">
+                    <label>📊 Subtotal (Base - Descuento + Taxes)</label>
+                    <input type="text" id="subtotal" readonly class="calculated">
+                </div>
+                <div class="form-group">
+                    <label>Walmart Fee (%)</label>
+                    <input type="number" step="0.01" id="walmartFeePercent" value="0" inputmode="decimal" placeholder="Ej: 15 para 15%">
                 </div>
                 <div class="form-group">
                     <label>Walmart Fee ($)</label>
-                    <input type="number" step="0.01" id="walmartFee" value="0" inputmode="decimal">
+                    <input type="text" id="walmartFee" readonly class="calculated">
                 </div>
                 <div class="form-group">
                     <label>Fulfillment ($)</label>
@@ -472,11 +488,11 @@
                 </div>
                 <div class="form-group">
                     <label>Inbound ($)</label>
-                    <input type="number" step="0.01" id="inbound" value="0" inputmode="decimal">
+                    <input type="number" step="0.01" id="inbound" value="0.70" inputmode="decimal">
                 </div>
                 <div class="form-group">
                     <label>Otras Tarifas ($)</label>
-                    <input type="number" step="0.01" id="otherFees" value="0" inputmode="decimal">
+                    <input type="number" step="0.01" id="otherFees" value="0.50" inputmode="decimal">
                 </div>
                 <div class="form-group">
                     <label>💰 Utilidad ($)</label>
@@ -573,7 +589,7 @@
         }
 
         function setupFormListeners() {
-            const inputs = ['precioVenta', 'vrUnit', 'descuento', 'taxes', 'walmartFee', 'fulfillment', 'inbound', 'otherFees'];
+            const inputs = ['precioVenta', 'vrUnit', 'descuentoPercent', 'taxesPercent', 'walmartFeePercent', 'fulfillment', 'inbound', 'otherFees'];
             inputs.forEach(id => {
                 document.getElementById(id).addEventListener('input', calculateProfit);
             });
@@ -582,14 +598,32 @@
         function calculateProfit() {
             const precioVenta = parseFloat(document.getElementById('precioVenta').value) || 0;
             const vrUnit = parseFloat(document.getElementById('vrUnit').value) || 0;
-            const descuento = parseFloat(document.getElementById('descuento').value) || 0;
-            const taxes = parseFloat(document.getElementById('taxes').value) || 0;
-            const walmartFee = parseFloat(document.getElementById('walmartFee').value) || 0;
+            const descuentoPercent = parseFloat(document.getElementById('descuentoPercent').value) || 0;
+            const taxesPercent = parseFloat(document.getElementById('taxesPercent').value) || 0;
+            const walmartFeePercent = parseFloat(document.getElementById('walmartFeePercent').value) || 0;
             const fulfillment = parseFloat(document.getElementById('fulfillment').value) || 0;
             const inbound = parseFloat(document.getElementById('inbound').value) || 0;
             const otherFees = parseFloat(document.getElementById('otherFees').value) || 0;
 
-            const utilidad = precioVenta - vrUnit - descuento - taxes - walmartFee - fulfillment - inbound - otherFees;
+            // Calcular Descuento en base al costo (vrUnit) y el porcentaje
+            const descuento = (vrUnit * descuentoPercent) / 100;
+            document.getElementById('descuento').value = '$' + descuento.toFixed(2);
+
+            // Calcular Impuestos en base al (costo - descuento) y el porcentaje
+            const baseAfterDiscount = vrUnit - descuento;
+            const taxes = (baseAfterDiscount * taxesPercent) / 100;
+            document.getElementById('taxes').value = '$' + taxes.toFixed(2);
+
+            // Calcular subtotal: base - descuento + taxes
+            const subtotal = vrUnit - descuento + taxes;
+            document.getElementById('subtotal').value = '$' + subtotal.toFixed(2);
+
+            // Calcular Walmart Fee en base al precio de venta y el porcentaje
+            const walmartFee = (precioVenta * walmartFeePercent) / 100;
+            document.getElementById('walmartFee').value = '$' + walmartFee.toFixed(2);
+
+            // Calcular utilidad usando el subtotal
+            const utilidad = precioVenta - subtotal - walmartFee - fulfillment - inbound - otherFees;
             document.getElementById('utilidad').value = '$' + utilidad.toFixed(2);
         }
 
@@ -597,15 +631,23 @@
             e.preventDefault();
             
             const utilidadValue = document.getElementById('utilidad').value.replace('$', '');
+            const subtotalValue = document.getElementById('subtotal').value.replace('$', '');
+            const descuentoValue = document.getElementById('descuento').value.replace('$', '');
+            const taxesValue = document.getElementById('taxes').value.replace('$', '');
+            const walmartFeeValue = document.getElementById('walmartFee').value.replace('$', '');
             
             const product = {
                 upc: document.getElementById('upc').value,
                 nombre: document.getElementById('nombre').value,
                 precioVenta: parseFloat(document.getElementById('precioVenta').value),
                 vrUnit: parseFloat(document.getElementById('vrUnit').value),
-                descuento: parseFloat(document.getElementById('descuento').value) || 0,
-                taxes: parseFloat(document.getElementById('taxes').value) || 0,
-                walmartFee: parseFloat(document.getElementById('walmartFee').value) || 0,
+                descuentoPercent: parseFloat(document.getElementById('descuentoPercent').value) || 0,
+                descuento: parseFloat(descuentoValue),
+                taxesPercent: parseFloat(document.getElementById('taxesPercent').value) || 0,
+                taxes: parseFloat(taxesValue),
+                subtotal: parseFloat(subtotalValue),
+                walmartFeePercent: parseFloat(document.getElementById('walmartFeePercent').value) || 0,
+                walmartFee: parseFloat(walmartFeeValue),
                 fulfillment: parseFloat(document.getElementById('fulfillment').value) || 0,
                 inbound: parseFloat(document.getElementById('inbound').value) || 0,
                 otherFees: parseFloat(document.getElementById('otherFees').value) || 0,
@@ -640,9 +682,9 @@
                 document.getElementById('nombre').value = product.nombre;
                 document.getElementById('precioVenta').value = product.precioVenta;
                 document.getElementById('vrUnit').value = product.vrUnit;
-                document.getElementById('descuento').value = product.descuento;
-                document.getElementById('taxes').value = product.taxes;
-                document.getElementById('walmartFee').value = product.walmartFee;
+                document.getElementById('descuentoPercent').value = product.descuentoPercent || 0;
+                document.getElementById('taxesPercent').value = product.taxesPercent || 0;
+                document.getElementById('walmartFeePercent').value = product.walmartFeePercent || 0;
                 document.getElementById('fulfillment').value = product.fulfillment;
                 document.getElementById('inbound').value = product.inbound;
                 document.getElementById('otherFees').value = product.otherFees;
@@ -754,9 +796,9 @@
                 document.getElementById('nombre').value = product.nombre;
                 document.getElementById('precioVenta').value = product.precioVenta;
                 document.getElementById('vrUnit').value = product.vrUnit;
-                document.getElementById('descuento').value = product.descuento;
-                document.getElementById('taxes').value = product.taxes;
-                document.getElementById('walmartFee').value = product.walmartFee;
+                document.getElementById('descuentoPercent').value = product.descuentoPercent || 0;
+                document.getElementById('taxesPercent').value = product.taxesPercent || 0;
+                document.getElementById('walmartFeePercent').value = product.walmartFeePercent || 0;
                 document.getElementById('fulfillment').value = product.fulfillment;
                 document.getElementById('inbound').value = product.inbound;
                 document.getElementById('otherFees').value = product.otherFees;
