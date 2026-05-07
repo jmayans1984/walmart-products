@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcas - Walmart</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #673ab7 0%, #512da8 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(103,58,183,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 { font-size: 24px; }
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .stats-bar {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+        .stat-item { text-align: center; }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #673ab7;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+        
+        .add-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .input-group input {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #673ab7;
+        }
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .btn-primary {
+            background: #673ab7;
+            color: white;
+            box-shadow: 0 4px 8px rgba(103,58,183,0.2);
+        }
+        .btn:active { transform: scale(0.98); }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .filter-tab {
+            flex: 1;
+            padding: 12px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .filter-tab.active {
+            background: #673ab7;
+            color: white;
+            border-color: #673ab7;
+        }
+        
+        .marca-card {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .marca-info { flex: 1; }
+        .marca-nombre {
+            font-weight: 600;
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-permitida {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .badge-bloqueada {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .marca-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .icon-btn:active { transform: scale(0.95); }
+        .btn-toggle {
+            background: #ff9800;
+            color: white;
+        }
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: white;
+            padding: 16px 24px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            z-index: 1002;
+            transition: transform 0.3s;
+        }
+        .notification.show { transform: translateX(-50%) translateY(0); }
+        .notification.success { border-left: 4px solid #4caf50; }
+        .notification.error { border-left: 4px solid #f44336; }
+        
+        .search-box {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #673ab7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏷️ Gestión de Marcas</h1>
+            <button class="back-btn" onclick="window.location.href='walmart-final.html'">← Volver</button>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalMarcas">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" style="color:#4caf50" id="permitidas">0</div>
+                <div class="stat-label">Permitidas</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" style="color:#f44336" id="bloqueadas">0</div>
+                <div class="stat-label">Bloqueadas</div>
+            </div>
+        </div>
+
+        <div class="add-section">
+            <h3 style="margin-bottom:16px;text-transform:uppercase">➕ Agregar Marca</h3>
+            <form id="addForm">
+                <div class="input-group">
+                    <input type="text" id="nombreMarca" placeholder="NOMBRE DE LA MARCA" required>
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </div>
+            </form>
+        </div>
+
+        <input type="text" id="searchBox" class="search-box" placeholder="🔍 BUSCAR MARCA...">
+
+        <div class="filter-tabs">
+            <div class="filter-tab active" onclick="setFilter('TODAS')">Todas</div>
+            <div class="filter-tab" onclick="setFilter('PERMITIDA')">Permitidas</div>
+            <div class="filter-tab" onclick="setFilter('BLOQUEADA')">Bloqueadas</div>
+        </div>
+
+        <div id="marcasList"></div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const db = window.supabase.createClient(
+            'https://zjdufzaqpcgxmnssrngq.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqZHVmemFxcGNneG1uc3NybmdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzgzNzQsImV4cCI6MjA5MzE1NDM3NH0.oPmO8n_1pL1XpDQl_cfaqs2QZFzxcu-5r80l_3GN3J4'
+        );
+        
+        let currentFilter = 'TODAS';
+        let searchQuery = '';
+        
+        // Agregar marca
+        document.getElementById('addForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            
+            const nombre = document.getElementById('nombreMarca').value.trim().toUpperCase();
+            if (!nombre) return;
+            
+            const { error } = await db
+                .from('marcas')
+                .insert([{ nombre: nombre, estado: 'PERMITIDA' }]);
+            
+            if (error) {
+                if (error.code === '23505') {
+                    notify('⚠️ Esta marca ya existe', 'error');
+                } else {
+                    notify('❌ Error: ' + error.message, 'error');
+                }
+                return;
+            }
+            
+            document.getElementById('nombreMarca').value = '';
+            notify('✅ Marca agregada', 'success');
+            loadMarcas();
+        });
+        
+        // Búsqueda
+        document.getElementById('searchBox').addEventListener('input', e => {
+            searchQuery = e.target.value.trim().toUpperCase();
+            loadMarcas();
+        });
+        
+        // Filtros
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            loadMarcas();
+        }
+        
+        // Cargar marcas
+        async function loadMarcas() {
+            const container = document.getElementById('marcasList');
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#666">Cargando...</div>';
+            
+            try {
+                let query = db.from('marcas').select('*');
+                
+                if (currentFilter !== 'TODAS') {
+                    query = query.eq('estado', currentFilter);
+                }
+                
+                const { data: marcas, error } = await query.order('nombre', { ascending: true });
+                
+                if (error) {
+                    container.innerHTML = '<div style="text-align:center;padding:20px;color:#f44336">Error: ' + error.message + '</div>';
+                    return;
+                }
+                
+                // Actualizar stats
+                const { data: allMarcas } = await db.from('marcas').select('estado');
+                if (allMarcas) {
+                    const perm = allMarcas.filter(m => m.estado === 'PERMITIDA').length;
+                    const bloq = allMarcas.filter(m => m.estado === 'BLOQUEADA').length;
+                    document.getElementById('totalMarcas').textContent = allMarcas.length;
+                    document.getElementById('permitidas').textContent = perm;
+                    document.getElementById('bloqueadas').textContent = bloq;
+                }
+                
+                if (!marcas || marcas.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p style="font-size:16px;font-weight:600">No hay marcas</p><p style="font-size:14px;margin-top:8px">Agrega tu primera marca arriba</p></div>';
+                    return;
+                }
+                
+                // Filtrar por búsqueda
+                let filtered = marcas;
+                if (searchQuery) {
+                    filtered = marcas.filter(m => m.nombre.includes(searchQuery));
+                }
+                
+                if (filtered.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p style="font-size:16px;font-weight:600">No se encontraron marcas</p></div>';
+                    return;
+                }
+                
+                container.innerHTML = filtered.map(m => {
+                    const badgeClass = m.estado === 'PERMITIDA' ? 'badge-permitida' : 'badge-bloqueada';
+                    const badgeText = m.estado === 'PERMITIDA' ? '✓ PERMITIDA' : '✕ BLOQUEADA';
+                    const toggleIcon = m.estado === 'PERMITIDA' ? '🚫' : '✓';
+                    const toggleTooltip = m.estado === 'PERMITIDA' ? 'Bloquear' : 'Permitir';
+                    
+                    return `
+                        <div class="marca-card">
+                            <div class="marca-info">
+                                <div class="marca-nombre">${m.nombre}</div>
+                                <span class="badge ${badgeClass}">${badgeText}</span>
+                            </div>
+                            <div class="marca-actions">
+                                <button class="icon-btn btn-toggle" onclick="toggleMarca(${m.id}, '${m.estado}')" title="${toggleTooltip}">
+                                    ${toggleIcon}
+                                </button>
+                                <button class="icon-btn btn-delete" onclick="deleteMarca(${m.id}, '${m.nombre}')" title="Eliminar">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (err) {
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:#f44336">Error de red</div>';
+                console.error(err);
+            }
+        }
+        
+        // Toggle estado
+        async function toggleMarca(id, estadoActual) {
+            const nuevoEstado = estadoActual === 'PERMITIDA' ? 'BLOQUEADA' : 'PERMITIDA';
+            
+            const { error } = await db
+                .from('marcas')
+                .update({ estado: nuevoEstado, updated_at: new Date().toISOString() })
+                .eq('id', id);
+            
+            if (error) {
+                notify('❌ Error al cambiar estado', 'error');
+                return;
+            }
+            
+            notify(`✅ Marca ${nuevoEstado.toLowerCase()}`, 'success');
+            loadMarcas();
+        }
+        
+        // Eliminar marca
+        async function deleteMarca(id, nombre) {
+            if (!confirm(`¿Eliminar la marca "${nombre}"?`)) return;
+            
+            const { error } = await db
+                .from('marcas')
+                .delete()
+                .eq('id', id);
+            
+            if (error) {
+                notify('❌ Error al eliminar', 'error');
+                return;
+            }
+            
+            notify('🗑️ Marca eliminada', 'success');
+            loadMarcas();
+        }
+        
+        function notify(msg, type = 'success') {
+            const n = document.getElementById('notification');
+            n.textContent = msg;
+            n.className = `notification ${type} show`;
+            setTimeout(() => n.classList.remove('show'), 3000);
+        }
+        
+        loadMarcas();
+    </script>
+</body>
+</html>
