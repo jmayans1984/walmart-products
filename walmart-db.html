@@ -739,17 +739,17 @@
             setupSearch();
         });
 
-        // Menú hamburguesa
-        function toggleMenu() {
+        // Menú hamburguesa - funciones globales
+        window.toggleMenu = function() {
             const menu = document.getElementById('sideMenu');
             const overlay = document.getElementById('menuOverlay');
             menu.classList.toggle('open');
             overlay.classList.toggle('show');
         }
 
-        async function filterProducts(filter) {
+        window.filterProducts = async function(filter) {
             currentFilter = filter;
-            toggleMenu();
+            window.toggleMenu();
             await loadProducts();
         }
 
