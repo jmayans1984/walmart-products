@@ -1079,15 +1079,21 @@
                     return;
                 }
 
-                container.innerHTML = products.map(product => `
+                container.innerHTML = products.map(product => {
+                    const estadoBadge = product.estado === 'VERIFICADO' 
+                        ? '<span class="badge-verificado">✓ VERIFICADO</span>' 
+                        : '<span class="badge-pendiente">⏳ POR VERIFICAR</span>';
+                    
+                    const verifyButton = product.estado === 'POR VERIFICAR' 
+                        ? `<button class="verify-btn" onclick="verifyProduct(${product.id})">✓ Marcar como Verificado</button>` 
+                        : '';
+
+                    return `
                     <div class="product-card">
                         <div class="product-header">
                             <div style="flex: 1;">
                                 <div class="product-name">
-                                    ${product.nombre}
-                                    ${product.estado === 'VERIFICADO' 
-                                        ? '<span class="badge-verificado">✓ VERIFICADO</span>' 
-                                        : '<span class="badge-pendiente">⏳ POR VERIFICAR</span>'}
+                                    ${product.nombre} ${estadoBadge}
                                 </div>
                                 <div class="product-upc">UPC: ${product.upc}</div>
                             </div>
@@ -1121,11 +1127,10 @@
                             <button class="edit-btn" onclick="editProduct(${product.id})">✏️ Editar</button>
                             <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️ Eliminar</button>
                         </div>
-                        ${product.estado === 'POR VERIFICAR' 
-                            ? `<button class="verify-btn" onclick="verifyProduct(${product.id})">✓ Marcar como Verificado</button>` 
-                            : ''}
+                        ${verifyButton}
                     </div>
-                `).join('');
+                    `;
+                }).join('');
                             <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️ Eliminar</button>
                         </div>
                     </div>
