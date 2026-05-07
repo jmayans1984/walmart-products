@@ -437,10 +437,180 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .hamburger-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            background: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .hamburger-menu:active {
+            transform: scale(0.95);
+        }
+
+        .hamburger-icon {
+            width: 24px;
+            height: 20px;
+            position: relative;
+            transform: rotate(0deg);
+            transition: .5s ease-in-out;
+        }
+
+        .hamburger-icon span {
+            display: block;
+            position: absolute;
+            height: 3px;
+            width: 100%;
+            background: #0071ce;
+            border-radius: 3px;
+            opacity: 1;
+            left: 0;
+            transform: rotate(0deg);
+            transition: .25s ease-in-out;
+        }
+
+        .hamburger-icon span:nth-child(1) { top: 0px; }
+        .hamburger-icon span:nth-child(2) { top: 8px; }
+        .hamburger-icon span:nth-child(3) { top: 16px; }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            box-shadow: -4px 0 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: right 0.3s;
+            padding: 80px 20px 20px;
+            overflow-y: auto;
+        }
+
+        .side-menu.open {
+            right: 0;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .menu-overlay.show {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 16px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid #0071ce;
+        }
+
+        .menu-item:active {
+            transform: scale(0.98);
+            background: #f0f0f0;
+        }
+
+        .menu-item-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .menu-item-count {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .verify-btn {
+            width: 100%;
+            padding: 12px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .verify-btn:active {
+            transform: scale(0.98);
+        }
+
+        .badge-verificado {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #4caf50;
+            color: white;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge-pendiente {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #ff9800;
+            color: white;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="hamburger-menu" onclick="toggleMenu()">
+            <div class="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+        
+        <div class="side-menu" id="sideMenu">
+            <h3 style="margin-bottom: 20px; color: #333;">📋 Filtros</h3>
+            <div class="menu-item" onclick="filterProducts('TODOS')">
+                <div class="menu-item-title">📦 Todos los productos</div>
+                <div class="menu-item-count" id="countTodos">0 productos</div>
+            </div>
+            <div class="menu-item" onclick="filterProducts('POR VERIFICAR')">
+                <div class="menu-item-title">⏳ Por verificar</div>
+                <div class="menu-item-count" id="countPendientes">0 productos</div>
+            </div>
+            <div class="menu-item" onclick="filterProducts('VERIFICADO')">
+                <div class="menu-item-title">✅ Verificados</div>
+                <div class="menu-item-count" id="countVerificados">0 productos</div>
+            </div>
+        </div>
+
         <div class="header">
             <h1>📦 Productos Walmart</h1>
             <p>☁️ Sincronizado en la nube</p>
@@ -528,16 +698,16 @@
                     <input type="number" step="0.01" id="fulfillment" value="0" inputmode="decimal">
                 </div>
                 <div class="form-group">
-                    <label>Inbound ($)</label>
-                    <input type="number" step="0.01" id="inbound" value="0.70" inputmode="decimal">
-                </div>
-                <div class="form-group">
                     <label>Otras Tarifas ($)</label>
                     <input type="number" step="0.01" id="otherFees" value="0.50" inputmode="decimal">
                 </div>
                 <div class="form-group">
                     <label>💰 Utilidad ($)</label>
                     <input type="text" id="utilidad" readonly class="calculated">
+                </div>
+                <div class="form-group">
+                    <label>📈 ROI (%)</label>
+                    <input type="text" id="roi" readonly class="calculated">
                 </div>
                 <button type="submit" class="save-btn">💾 Guardar Producto</button>
                 <button type="button" class="cancel-btn" id="cancelBtn">Cancelar</button>
@@ -561,12 +731,27 @@
         let html5QrCode = null;
         let isScanning = false;
         let currentEditingId = null;
+        let currentFilter = 'TODOS';
 
         document.addEventListener('DOMContentLoaded', () => {
             loadProducts();
             setupFormListeners();
             setupSearch();
         });
+
+        // Menú hamburguesa
+        function toggleMenu() {
+            const menu = document.getElementById('sideMenu');
+            const overlay = document.getElementById('menuOverlay');
+            menu.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        async function filterProducts(filter) {
+            currentFilter = filter;
+            toggleMenu();
+            await loadProducts();
+        }
 
         // Configurar búsqueda
         async function setupSearch() {
@@ -609,11 +794,15 @@
         document.getElementById('manualBtn').addEventListener('click', () => {
             currentEditingId = null;
             document.getElementById('productForm').reset();
-            document.getElementById('inbound').value = '0.70';
             document.getElementById('otherFees').value = '0.50';
             document.getElementById('formSection').classList.add('active');
             document.getElementById('upc').focus();
             document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Convertir nombre a mayúsculas automáticamente
+        document.getElementById('nombre').addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
         });
 
         document.getElementById('scanBtn').addEventListener('click', async () => {
@@ -636,8 +825,9 @@
                     html5QrCode.start(
                         cameraId,
                         {
-                            fps: 10,
-                            qrbox: { width: 250, height: 150 }
+                            fps: 30,
+                            qrbox: { width: 300, height: 200 },
+                            aspectRatio: 1.0
                         },
                         (decodedText) => {
                             document.getElementById('upc').value = decodedText;
@@ -679,7 +869,7 @@
         }
 
         function setupFormListeners() {
-            const inputs = ['precioVenta', 'vrUnit', 'descuentoPercent', 'taxesPercent', 'walmartFeePercent', 'fulfillment', 'inbound', 'otherFees'];
+            const inputs = ['precioVenta', 'vrUnit', 'descuentoPercent', 'taxesPercent', 'walmartFeePercent', 'fulfillment', 'otherFees'];
             inputs.forEach(id => {
                 document.getElementById(id).addEventListener('input', calculateProfit);
             });
@@ -692,7 +882,6 @@
             const taxesPercent = parseFloat(document.getElementById('taxesPercent').value) || 0;
             const walmartFeePercent = parseFloat(document.getElementById('walmartFeePercent').value) || 0;
             const fulfillment = parseFloat(document.getElementById('fulfillment').value) || 0;
-            const inbound = parseFloat(document.getElementById('inbound').value) || 0;
             const otherFees = parseFloat(document.getElementById('otherFees').value) || 0;
 
             // Calcular Descuento en base al costo (vrUnit) y el porcentaje
@@ -712,9 +901,13 @@
             const walmartFee = (precioVenta * walmartFeePercent) / 100;
             document.getElementById('walmartFee').value = '$' + walmartFee.toFixed(2);
 
-            // Calcular utilidad usando el subtotal
-            const utilidad = precioVenta - subtotal - walmartFee - fulfillment - inbound - otherFees;
+            // Calcular utilidad usando el subtotal (sin inbound)
+            const utilidad = precioVenta - subtotal - walmartFee - fulfillment - otherFees;
             document.getElementById('utilidad').value = '$' + utilidad.toFixed(2);
+
+            // Calcular ROI% = (utilidad / subtotal) * 100
+            const roi = subtotal > 0 ? (utilidad / subtotal) * 100 : 0;
+            document.getElementById('roi').value = roi.toFixed(2) + '%';
         }
 
         document.getElementById('productForm').addEventListener('submit', async (e) => {
@@ -725,10 +918,11 @@
             const descuentoValue = document.getElementById('descuento').value.replace('$', '');
             const taxesValue = document.getElementById('taxes').value.replace('$', '');
             const walmartFeeValue = document.getElementById('walmartFee').value.replace('$', '');
+            const roiValue = document.getElementById('roi').value.replace('%', '');
             
             const product = {
                 upc: document.getElementById('upc').value,
-                nombre: document.getElementById('nombre').value,
+                nombre: document.getElementById('nombre').value.toUpperCase(),
                 precio_venta: parseFloat(document.getElementById('precioVenta').value),
                 vr_unit: parseFloat(document.getElementById('vrUnit').value),
                 descuento_percent: parseFloat(document.getElementById('descuentoPercent').value) || 0,
@@ -739,11 +933,17 @@
                 walmart_fee_percent: parseFloat(document.getElementById('walmartFeePercent').value) || 0,
                 walmart_fee: parseFloat(walmartFeeValue),
                 fulfillment: parseFloat(document.getElementById('fulfillment').value) || 0,
-                inbound: parseFloat(document.getElementById('inbound').value) || 0,
                 other_fees: parseFloat(document.getElementById('otherFees').value) || 0,
                 utilidad: parseFloat(utilidadValue),
+                roi: parseFloat(roiValue),
+                estado: currentEditingId ? undefined : 'POR VERIFICAR',
                 updated_at: new Date().toISOString()
             };
+
+            // Si estamos editando, no cambiar el estado
+            if (currentEditingId) {
+                delete product.estado;
+            }
 
             let result;
             if (currentEditingId) {
@@ -765,8 +965,8 @@
                 return;
             }
 
-            await loadProducts();
             resetForm();
+            await loadProducts();
         });
 
         document.getElementById('cancelBtn').addEventListener('click', resetForm);
@@ -787,12 +987,12 @@
                 document.getElementById('taxesPercent').value = product.taxes_percent || 0;
                 document.getElementById('walmartFeePercent').value = product.walmart_fee_percent || 0;
                 document.getElementById('fulfillment').value = product.fulfillment;
-                document.getElementById('inbound').value = product.inbound;
                 document.getElementById('otherFees').value = product.other_fees;
                 calculateProfit();
-                showNotification('📝 Editando producto existente', 'success');
+                showNotification('📝 Producto encontrado - Editando', 'success');
             } else {
                 currentEditingId = null;
+                showNotification('🆕 Producto nuevo', 'success');
             }
         }
 
@@ -800,24 +1000,36 @@
             document.getElementById('productForm').reset();
             document.getElementById('formSection').classList.remove('active');
             document.getElementById('utilidad').value = '';
-            document.getElementById('inbound').value = '0.70';
+            document.getElementById('roi').value = '';
             document.getElementById('otherFees').value = '0.50';
             currentEditingId = null;
         }
 
         async function updateStats() {
-            const { data: products } = await db
+            const { data: allProducts } = await db
                 .from('walmart_products')
-                .select('utilidad');
+                .select('utilidad, estado');
             
-            if (products && products.length > 0) {
+            if (allProducts && allProducts.length > 0) {
+                // Actualizar estadísticas generales
                 document.getElementById('statsBar').style.display = 'grid';
-                document.getElementById('totalProducts').textContent = products.length;
-                const totalProfit = products.reduce((sum, p) => sum + parseFloat(p.utilidad), 0);
+                document.getElementById('totalProducts').textContent = allProducts.length;
+                const totalProfit = allProducts.reduce((sum, p) => sum + parseFloat(p.utilidad), 0);
                 document.getElementById('totalProfit').textContent = '$' + totalProfit.toFixed(2);
                 document.getElementById('totalProfit').style.color = totalProfit >= 0 ? '#4caf50' : '#f44336';
+
+                // Actualizar contadores del menú
+                const pendientes = allProducts.filter(p => p.estado === 'POR VERIFICAR').length;
+                const verificados = allProducts.filter(p => p.estado === 'VERIFICADO').length;
+                
+                document.getElementById('countTodos').textContent = `${allProducts.length} productos`;
+                document.getElementById('countPendientes').textContent = `${pendientes} productos`;
+                document.getElementById('countVerificados').textContent = `${verificados} productos`;
             } else {
                 document.getElementById('statsBar').style.display = 'none';
+                document.getElementById('countTodos').textContent = '0 productos';
+                document.getElementById('countPendientes').textContent = '0 productos';
+                document.getElementById('countVerificados').textContent = '0 productos';
             }
         }
 
@@ -826,10 +1038,16 @@
             container.innerHTML = '<div class="loading" style="text-align:center;padding:20px;color:#666">Cargando productos...</div>';
             
             try {
-                const { data: products, error } = await db
+                let query = db
                     .from('walmart_products')
-                    .select('*')
-                    .order('updated_at', { ascending: false });
+                    .select('*');
+
+                // Aplicar filtro si no es TODOS
+                if (currentFilter !== 'TODOS') {
+                    query = query.eq('estado', currentFilter);
+                }
+
+                const { data: products, error } = await query.order('updated_at', { ascending: false });
 
                 if (error) {
                     container.innerHTML = `
@@ -865,7 +1083,12 @@
                     <div class="product-card">
                         <div class="product-header">
                             <div style="flex: 1;">
-                                <div class="product-name">${product.nombre}</div>
+                                <div class="product-name">
+                                    ${product.nombre}
+                                    ${product.estado === 'VERIFICADO' 
+                                        ? '<span class="badge-verificado">✓ VERIFICADO</span>' 
+                                        : '<span class="badge-pendiente">⏳ POR VERIFICAR</span>'}
+                                </div>
                                 <div class="product-upc">UPC: ${product.upc}</div>
                             </div>
                             <div class="product-profit ${product.utilidad < 0 ? 'negative' : ''}">
@@ -879,7 +1102,7 @@
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">💰 Costo:</span>
-                                <span>$${parseFloat(product.vr_unit).toFixed(2)}</span>
+                                <span>$${parseFloat(product.subtotal).toFixed(2)}</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">🏪 WM Fee:</span>
@@ -890,16 +1113,19 @@
                                 <span>$${parseFloat(product.fulfillment).toFixed(2)}</span>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">🚚 Inbound:</span>
-                                <span>$${parseFloat(product.inbound).toFixed(2)}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">📊 Taxes:</span>
-                                <span>$${parseFloat(product.taxes).toFixed(2)}</span>
+                                <span class="detail-label">📈 ROI:</span>
+                                <span>${parseFloat(product.roi || 0).toFixed(2)}%</span>
                             </div>
                         </div>
                         <div class="product-actions">
                             <button class="edit-btn" onclick="editProduct(${product.id})">✏️ Editar</button>
+                            <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️ Eliminar</button>
+                        </div>
+                        ${product.estado === 'POR VERIFICAR' 
+                            ? `<button class="verify-btn" onclick="verifyProduct(${product.id})">✓ Marcar como Verificado</button>` 
+                            : ''}
+                    </div>
+                `).join('');
                             <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️ Eliminar</button>
                         </div>
                     </div>
@@ -920,6 +1146,21 @@
             }
         }
 
+        async function verifyProduct(id) {
+            const { error } = await db
+                .from('walmart_products')
+                .update({ estado: 'VERIFICADO', updated_at: new Date().toISOString() })
+                .eq('id', id);
+
+            if (error) {
+                showNotification('Error al verificar', 'error');
+                return;
+            }
+
+            showNotification('✅ Producto verificado', 'success');
+            await loadProducts();
+        }
+
         async function editProduct(id) {
             const { data: product } = await db
                 .from('walmart_products')
@@ -937,7 +1178,6 @@
                 document.getElementById('taxesPercent').value = product.taxes_percent || 0;
                 document.getElementById('walmartFeePercent').value = product.walmart_fee_percent || 0;
                 document.getElementById('fulfillment').value = product.fulfillment;
-                document.getElementById('inbound').value = product.inbound;
                 document.getElementById('otherFees').value = product.other_fees;
                 calculateProfit();
                 
