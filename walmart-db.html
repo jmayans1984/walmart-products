@@ -125,12 +125,19 @@
         }
         .form-section.active { display: block; }
         .form-group { margin-bottom: 16px; }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
         .form-group label {
             display: block;
             margin-bottom: 6px;
             color: #333;
-            font-weight: 500;
-            font-size: 14px;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
         }
         .form-group input {
             width: 100%;
@@ -138,6 +145,7 @@
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 16px;
+            text-transform: uppercase;
         }
         .form-group input:focus {
             outline: none;
@@ -147,6 +155,14 @@
             background: #e8f5e9;
             font-weight: 700;
             color: #2e7d32;
+        }
+        .form-result {
+            margin-bottom: 16px;
+        }
+        .form-result input {
+            font-size: 24px !important;
+            font-weight: 700 !important;
+            text-align: center;
         }
         
         .product-card {
@@ -273,70 +289,100 @@
         </div>
 
         <div class="form-section" id="formSection">
-            <h2 style="margin-bottom:20px">📝 Datos del Producto</h2>
+            <h2 style="margin-bottom:20px;text-transform:uppercase">📝 Datos del Producto</h2>
             <form id="productForm">
+                <!-- Fila 1: UPC -->
                 <div class="form-group">
                     <label>UPC</label>
                     <input type="text" id="upc" required>
                 </div>
+                
+                <!-- Fila 2: Nombre -->
                 <div class="form-group">
                     <label>Nombre</label>
                     <input type="text" id="nombre" required>
                 </div>
-                <div class="form-group">
-                    <label>Precio Venta ($)</label>
-                    <input type="number" step="0.01" id="precioVenta" required>
+                
+                <!-- Fila 3: Precio Venta y Precio Compra -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Precio Venta ($)</label>
+                        <input type="number" step="0.01" id="precioVenta" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio Compra ($)</label>
+                        <input type="number" step="0.01" id="vrUnit" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Valor Unitario ($)</label>
-                    <input type="number" step="0.01" id="vrUnit" required>
+                
+                <!-- Fila 4: Descuento % y $ -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Descuento (%)</label>
+                        <input type="number" step="0.01" id="descuentoPercent" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Descuento ($)</label>
+                        <input type="text" id="descuento" readonly>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Descuento (%)</label>
-                    <input type="number" step="0.01" id="descuentoPercent" value="0">
+                
+                <!-- Fila 5: Impuestos % y $ -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Impuestos (%)</label>
+                        <input type="number" step="0.01" id="taxesPercent" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Impuestos ($)</label>
+                        <input type="text" id="taxes" readonly>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Descuento ($)</label>
-                    <input type="text" id="descuento" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Impuestos (%)</label>
-                    <input type="number" step="0.01" id="taxesPercent" value="0">
-                </div>
-                <div class="form-group">
-                    <label>Impuestos ($)</label>
-                    <input type="text" id="taxes" readonly>
-                </div>
+                
+                <!-- Fila 6: Subtotal -->
                 <div class="form-group">
                     <label>Subtotal ($)</label>
                     <input type="text" id="subtotal" readonly>
                 </div>
-                <div class="form-group">
-                    <label>Walmart Fee (%)</label>
-                    <input type="number" step="0.01" id="walmartFeePercent" value="0">
+                
+                <!-- Fila 7: Walmart Fee % y $ -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Walmart Fee (%)</label>
+                        <input type="number" step="0.01" id="walmartFeePercent" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Walmart Fee ($)</label>
+                        <input type="text" id="walmartFee" readonly>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Walmart Fee ($)</label>
-                    <input type="text" id="walmartFee" readonly>
+                
+                <!-- Fila 8: Fulfillment y Otras Tarifas -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fulfillment ($)</label>
+                        <input type="number" step="0.01" id="fulfillment" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Otras Tarifas ($)</label>
+                        <input type="number" step="0.01" id="otherFees" value="0.50">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Fulfillment ($)</label>
-                    <input type="number" step="0.01" id="fulfillment" value="0">
+                
+                <!-- Fila 9: Utilidad y ROI (GRANDES) -->
+                <div class="form-row">
+                    <div class="form-group form-result">
+                        <label>💰 Utilidad ($)</label>
+                        <input type="text" id="utilidad" readonly>
+                    </div>
+                    <div class="form-group form-result">
+                        <label>📈 ROI (%)</label>
+                        <input type="text" id="roi" readonly>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Otras Tarifas ($)</label>
-                    <input type="number" step="0.01" id="otherFees" value="0.50">
-                </div>
-                <div class="form-group">
-                    <label>💰 Utilidad ($)</label>
-                    <input type="text" id="utilidad" readonly>
-                </div>
-                <div class="form-group">
-                    <label>📈 ROI (%)</label>
-                    <input type="text" id="roi" readonly>
-                </div>
-                <button type="submit" class="btn" style="background:#4caf50;color:white;margin-top:20px">💾 Guardar</button>
-                <button type="button" class="btn delete-btn" onclick="hideForm()" style="margin-top:10px">Cancelar</button>
+                
+                <button type="submit" class="btn" style="background:#4caf50;color:white;margin-top:20px;text-transform:uppercase">💾 Guardar</button>
+                <button type="button" class="btn delete-btn" onclick="hideForm()" style="margin-top:10px;text-transform:uppercase">Cancelar</button>
             </form>
         </div>
 
@@ -382,11 +428,6 @@
             document.getElementById('formSection').classList.remove('active');
             editingId = null;
         }
-        
-        // Nombre en mayúsculas
-        document.getElementById('nombre').addEventListener('input', e => {
-            e.target.value = e.target.value.toUpperCase();
-        });
         
         // Cálculos
         ['precioVenta','vrUnit','descuentoPercent','taxesPercent','walmartFeePercent','fulfillment','otherFees'].forEach(id => {
