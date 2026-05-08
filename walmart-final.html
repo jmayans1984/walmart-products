@@ -524,31 +524,49 @@
                 
                 const camId = cams.length > 1 ? cams[1].id : cams[0].id;
                 
-                scanner.start(camId, { fps: 30, qrbox: { width: 300, height: 200 } }, async code => {
-                    document.getElementById('upc').value = code;
-                    stopScan();
-                    
-                    const { data } = await db.from('walmart_products').select('*').eq('upc', code);
-                    if (data && data.length > 0) {
-                        const p = data[0];
-                        editingId = p.id;
-                        document.getElementById('nombre').value = p.nombre;
-                        document.getElementById('precioVenta').value = p.precio_venta;
-                        document.getElementById('vrUnit').value = p.vr_unit;
-                        document.getElementById('descuentoPercent').value = p.descuento_percent || 0;
-                        document.getElementById('taxesPercent').value = p.taxes_percent || 0;
-                        document.getElementById('walmartFeePercent').value = p.walmart_fee_percent || 0;
-                        document.getElementById('fulfillment').value = p.fulfillment;
-                        document.getElementById('otherFees').value = p.other_fees;
-                        calculate();
-                        notify('📝 Producto encontrado', 'success');
-                    } else {
-                        editingId = null;
-                        notify('🆕 Producto nuevo', 'success');
-                    }
-                    
-                    document.getElementById('formSection').classList.add('active');
-                }, () => {});
+                scanner.start(
+                    camId, 
+                    { 
+                        fps: 30,
+                        qrbox: { width: 350, height: 150 },
+                        aspectRatio: 1.777778,
+                        formatsToSupport: [
+                            Html5QrcodeSupportedFormats.UPC_A,
+                            Html5QrcodeSupportedFormats.UPC_E,
+                            Html5QrcodeSupportedFormats.EAN_13,
+                            Html5QrcodeSupportedFormats.EAN_8,
+                            Html5QrcodeSupportedFormats.CODE_128,
+                            Html5QrcodeSupportedFormats.CODE_39,
+                            Html5QrcodeSupportedFormats.QR_CODE
+                        ]
+                    }, 
+                    async code => {
+                        document.getElementById('upc').value = code;
+                        stopScan();
+                        
+                        const { data } = await db.from('walmart_products').select('*').eq('upc', code);
+                        if (data && data.length > 0) {
+                            const p = data[0];
+                            editingId = p.id;
+                            document.getElementById('nombre').value = p.nombre;
+                            document.getElementById('precioVenta').value = p.precio_venta;
+                            document.getElementById('vrUnit').value = p.vr_unit;
+                            document.getElementById('descuentoPercent').value = p.descuento_percent || 0;
+                            document.getElementById('taxesPercent').value = p.taxes_percent || 0;
+                            document.getElementById('walmartFeePercent').value = p.walmart_fee_percent || 0;
+                            document.getElementById('fulfillment').value = p.fulfillment;
+                            document.getElementById('otherFees').value = p.other_fees;
+                            calculate();
+                            notify('📝 Producto encontrado', 'success');
+                        } else {
+                            editingId = null;
+                            notify('🆕 Producto nuevo', 'success');
+                        }
+                        
+                        document.getElementById('formSection').classList.add('active');
+                    }, 
+                    () => {}
+                );
                 
             } catch (err) {
                 notify('Error de cámara', 'error');
