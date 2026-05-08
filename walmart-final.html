@@ -527,18 +527,20 @@
                 scanner.start(
                     camId, 
                     { 
-                        fps: 30,
-                        qrbox: { width: 350, height: 150 },
-                        aspectRatio: 1.777778,
-                        formatsToSupport: [
-                            Html5QrcodeSupportedFormats.UPC_A,
-                            Html5QrcodeSupportedFormats.UPC_E,
-                            Html5QrcodeSupportedFormats.EAN_13,
-                            Html5QrcodeSupportedFormats.EAN_8,
-                            Html5QrcodeSupportedFormats.CODE_128,
-                            Html5QrcodeSupportedFormats.CODE_39,
-                            Html5QrcodeSupportedFormats.QR_CODE
-                        ]
+                        fps: 60,
+                        qrbox: function(viewfinderWidth, viewfinderHeight) {
+                            let minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                            let qrboxSize = Math.floor(minEdge * 0.8);
+                            return {
+                                width: qrboxSize,
+                                height: Math.floor(qrboxSize * 0.5)
+                            };
+                        },
+                        aspectRatio: 1.0,
+                        videoConstraints: {
+                            facingMode: "environment",
+                            advanced: [{ focusMode: "continuous" }]
+                        }
                     }, 
                     async code => {
                         document.getElementById('upc').value = code;
@@ -564,13 +566,19 @@
                         }
                         
                         document.getElementById('formSection').classList.add('active');
+                        document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
                     }, 
                     () => {}
-                );
+                ).catch(err => {
+                    console.error("Error al iniciar scanner:", err);
+                    notify('Error al iniciar cámara', 'error');
+                    stopScan();
+                });
                 
             } catch (err) {
                 notify('Error de cámara', 'error');
                 console.error(err);
+                stopScan();
             }
         });
         
