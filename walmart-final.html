@@ -396,7 +396,7 @@
 
     <div class="notification" id="notification"></div>
 
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const db = window.supabase.createClient(
@@ -404,7 +404,7 @@
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqZHVmemFxcGNneG1uc3NybmdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzgzNzQsImV4cCI6MjA5MzE1NDM3NH0.oPmO8n_1pL1XpDQl_cfaqs2QZFzxcu-5r80l_3GN3J4'
         );
         
-        let scanner = null;
+        let codeReader = null;
         let scanning = false;
         let editingId = null;
         let filter = 'TODOS';
@@ -506,14 +506,16 @@
             loadProducts();
         });
         
-        // Scanner
+        // Scanner con ZXing
         document.getElementById('scanBtn').addEventListener('click', async () => {
             if (scanning) return;
+            
             try {
-                scanner = new Html5Qrcode("reader");
-                const cams = await Html5Qrcode.getCameras();
-                if (!cams || cams.length === 0) {
-                    notify('No hay cámara', 'error');
+                codeReader = new ZXing.BrowserMultiFormatReader();
+                const videoDevices = await codeReader.listVideoInputDevices();
+                
+                if (!videoDevices || videoDevices.length === 0) {
+                    notify('No hay cámara disponible', 'error');
                     return;
                 }
                 
@@ -522,31 +524,24 @@
                 document.getElementById('stopScanBtn').style.display = 'block';
                 document.getElementById('scanBtn').style.display = 'none';
                 
-                const camId = cams.length > 1 ? cams[1].id : cams[0].id;
+                // Crear elemento de video
+                const videoElement = document.createElement('video');
+                videoElement.style.width = '100%';
+                videoElement.style.borderRadius = '8px';
+                document.getElementById('reader').innerHTML = '';
+                document.getElementById('reader').appendChild(videoElement);
                 
-                scanner.start(
-                    camId, 
-                    { 
-                        fps: 60,
-                        qrbox: function(viewfinderWidth, viewfinderHeight) {
-                            let minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                            let qrboxSize = Math.floor(minEdge * 0.8);
-                            return {
-                                width: qrboxSize,
-                                height: Math.floor(qrboxSize * 0.5)
-                            };
-                        },
-                        aspectRatio: 1.0,
-                        videoConstraints: {
-                            facingMode: "environment",
-                            advanced: [{ focusMode: "continuous" }]
-                        }
-                    }, 
-                    async code => {
+                // Usar cámara trasera si está disponible
+                const selectedDeviceId = videoDevices.length > 1 ? videoDevices[1].deviceId : videoDevices[0].deviceId;
+                
+                codeReader.decodeFromVideoDevice(selectedDeviceId, videoElement, async (result, err) => {
+                    if (result) {
+                        const code = result.text;
                         document.getElementById('upc').value = code;
-                        stopScan();
                         
+                        // Buscar en BD
                         const { data } = await db.from('walmart_products').select('*').eq('upc', code);
+                        
                         if (data && data.length > 0) {
                             const p = data[0];
                             editingId = p.id;
@@ -560,19 +555,17 @@
                             document.getElementById('otherFees').value = p.other_fees;
                             calculate();
                             notify('📝 Producto encontrado', 'success');
+                            stopScan();
+                            document.getElementById('formSection').classList.add('active');
+                            document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
                         } else {
                             editingId = null;
-                            notify('🆕 Producto nuevo', 'success');
+                            notify(`📱 Código: ${code}`, 'success');
+                            stopScan();
+                            document.getElementById('formSection').classList.add('active');
+                            document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
                         }
-                        
-                        document.getElementById('formSection').classList.add('active');
-                        document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
-                    }, 
-                    () => {}
-                ).catch(err => {
-                    console.error("Error al iniciar scanner:", err);
-                    notify('Error al iniciar cámara', 'error');
-                    stopScan();
+                    }
                 });
                 
             } catch (err) {
@@ -585,10 +578,11 @@
         document.getElementById('stopScanBtn').addEventListener('click', stopScan);
         
         function stopScan() {
-            if (scanner && scanning) {
-                scanner.stop();
+            if (codeReader && scanning) {
+                codeReader.reset();
                 scanning = false;
                 document.getElementById('reader').style.display = 'none';
+                document.getElementById('reader').innerHTML = '';
                 document.getElementById('stopScanBtn').style.display = 'none';
                 document.getElementById('scanBtn').style.display = 'block';
             }
